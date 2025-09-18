@@ -1,0 +1,246 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String   @id @default(uuid())
+  email          String   @unique
+  provider       String
+  providerId     String
+  displayName    String
+  avatarUrl      String?
+  bio            String?
+  homeLocationId String? 
+  homeLocation   Location? @relation(fields: [homeLocationId], references: [id])
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  isAdmin        Boolean  @default(false)
+  isSuspended    Boolean  @default(false)
+  skills         ProfileSkill[]
+  listings       Listing[]
+  wallets        Wallet[]
+  bookings       Booking[] @relation("UserBookings")
+  messages       Message[]
+  reviews        Review[] @relation("UserReviews")
+  audits         AuditLog[]
+  oauthAccounts  OAuthAccount[]
+  embeddings     Embedding[]
+  reports        Report[]
+}
+
+model Location {
+  id          String   @id @default(uuid())
+  addressLine String?
+  city        String?
+  postcode    String?
+  countryCode String?
+  lat         Float?
+  lng         Float?
+  geocodedAt  DateTime @default(now())
+  users       User[]
+  listings    Listing[]
+}
+
+model ProfileSkill {
+  id     String @id @default(uuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+  tag    String
+}
+
+model Listing {
+  id            String   @id @default(uuid())
+  ownerId       String
+  owner         User     @relation(fields: [ownerId], references: [id])
+  kind          ListingKind
+  title         String
+  description   String
+  categories    String[]
+  priceType     PriceType
+  cashPrice     Float?
+  creditPrice   Int?
+  preferredMeet MeetType
+  locationId    String?
+  location      Location? @relation(fields: [locationId], references: [id])
+  images        String[]
+  visibility    Visibility
+  status        ListingStatus @default(ACTIVE)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  bookings      Booking[]
+  embeddings    Embedding[]
+}
+
+model Booking {
+  id            String   @id @default(uuid())
+  listingId     String
+  listing       Listing  @relation(fields: [listingId], references: [id])
+  requesterId   String
+  requester     User     @relation("UserBookings", fields: [requesterId], references: [id])
+  status        BookingStatus @default(REQUESTED)
+  meetType      MeetType
+  scheduledStart DateTime?
+  scheduledEnd   DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  messages      Message[]
+  reviews       Review[]
+  transactions  WalletTransaction[]
+}
+
+model Message {
+  id        String   @id @default(uuid())
+  bookingId String
+  booking   Booking  @relation(fields: [bookingId], references: [id])
+  senderId  String
+  sender    User     @relation(fields: [senderId], references: [id])
+  body      String
+  createdAt DateTime @default(now())
+  system    Boolean  @default(false)
+}
+
+model Review {
+  id          String   @id @default(uuid())
+  bookingId   String
+  booking     Booking  @relation(fields: [bookingId], references: [id])
+  authorId    String
+  author      User     @relation("UserReviews", fields: [authorId], references: [id])
+  targetUserId String
+  rating      Int
+  body        String
+  createdAt   DateTime @default(now())
+}
+
+model Wallet {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id])
+  balance   Int      @default(10)
+  updatedAt DateTime @updatedAt
+  transactions WalletTransaction[]
+}
+
+model WalletTransaction {
+  id        String   @id @default(uuid())
+  walletId  String
+  wallet    Wallet   @relation(fields: [walletId], references: [id])
+  type      WalletTransactionType
+  amount    Int
+  bookingId String?
+  booking   Booking? @relation(fields: [bookingId], references: [id])
+  reason    String?
+  createdAt DateTime @default(now())
+}
+
+model Embedding {
+  id        String   @id @default(uuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+  listingId String?
+  listing   Listing? @relation(fields: [listingId], references: [id])
+  kind      EmbeddingKind
+  vector    Bytes
+  model     String
+  createdAt DateTime @default(now())
+}
+
+model Report {
+  id         String   @id @default(uuid())
+  reporterId String
+  reporter   User     @relation(fields: [reporterId], references: [id])
+  targetType ReportTargetType
+  targetId   String
+  reason     String
+  createdAt  DateTime @default(now())
+  resolved   Boolean  @default(false)
+}
+
+model AuditLog {
+  id          String   @id @default(uuid())
+  actorUserId String?
+  actor       User?    @relation(fields: [actorUserId], references: [id])
+  action      String
+  entityType  String
+  entityId    String
+  metadata    Json
+  createdAt   DateTime @default(now())
+}
+
+model FeatureFlag {
+  key      String @id
+  value    Json
+  updatedAt DateTime @updatedAt
+}
+
+model OAuthAccount {
+  id                String   @id @default(uuid())
+  userId            String
+  user              User     @relation(fields: [userId], references: [id])
+  provider          AuthProvider
+  providerAccountId String
+  accessToken       String
+  refreshToken      String
+  expiresAt         DateTime?
+}
+
+enum ListingKind {
+  OFFER
+  NEED
+}
+
+enum PriceType {
+  BARTER
+  CASH
+  BOTH
+}
+
+enum MeetType {
+  IN_PERSON
+  REMOTE
+}
+
+enum Visibility {
+  PUBLIC
+  PRIVATE
+}
+
+enum ListingStatus {
+  ACTIVE
+  PAUSED
+  REMOVED
+}
+
+enum BookingStatus {
+  REQUESTED
+  ACCEPTED
+  DECLINED
+  COMPLETED
+  CANCELLED
+}
+
+enum WalletTransactionType {
+  EARN
+  SPEND
+  REFUND
+  ADJUST
+}
+
+enum EmbeddingKind {
+  USER
+  LISTING
+}
+
+enum ReportTargetType {
+  LISTING
+  MESSAGE
+  USER
+}
+
+enum AuthProvider {
+  GOOGLE
+}
