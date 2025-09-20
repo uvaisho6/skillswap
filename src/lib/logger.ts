@@ -7,7 +7,7 @@ export async function logAudit(
   action: string,
   entityType: string,
   entityId: string,
-  metadata: any
+  metadata: Record<string, unknown>
 ) {
   await prisma.auditLog.create({
     data: {
@@ -15,7 +15,8 @@ export async function logAudit(
       action,
       entityType,
       entityId,
-      metadata,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      metadata: metadata as any,
     },
   });
 }
