@@ -8,7 +8,7 @@ const prisma = new PrismaClient();
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
   const session = await getServerSession(authOptions);
 
@@ -18,7 +18,7 @@ export async function GET(
 
   const booking = await prisma.booking.findUnique({
     where: {
-      id: params.id,
+      id: context.params.id,
     },
     include: {
       listing: true,
@@ -34,7 +34,7 @@ export async function GET(
 
   const messages = await prisma.message.findMany({
     where: {
-      bookingId: params.id,
+      bookingId: context.params.id,
     },
     orderBy: {
       createdAt: "asc",
@@ -46,7 +46,7 @@ export async function GET(
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
   const session = await getServerSession(authOptions);
 
@@ -64,7 +64,7 @@ export async function POST(
 
   const message = await prisma.message.create({
     data: {
-      bookingId: params.id,
+      bookingId: context.params.id,
       senderId: session.user.id,
       body,
     },

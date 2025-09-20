@@ -7,11 +7,11 @@ const prisma = new PrismaClient();
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
   const listing = await prisma.listing.findUnique({
     where: {
-      id: params.id,
+      id: context.params.id,
     },
   });
 
@@ -20,7 +20,7 @@ export async function GET(
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
   const session = await getServerSession(authOptions);
 
@@ -45,7 +45,7 @@ export async function PUT(
 
   const listing = await prisma.listing.update({
     where: {
-      id: params.id,
+      id: context.params.id,
       ownerId: session.user.id,
     },
     data: {
@@ -69,7 +69,7 @@ export async function PUT(
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
   const session = await getServerSession(authOptions);
 
@@ -79,7 +79,7 @@ export async function DELETE(
 
   await prisma.listing.delete({
     where: {
-      id: params.id,
+      id: context.params.id,
       ownerId: session.user.id,
     },
   });

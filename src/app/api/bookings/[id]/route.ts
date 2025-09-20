@@ -7,7 +7,7 @@ const prisma = new PrismaClient();
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
   const session = await getServerSession(authOptions);
 
@@ -17,7 +17,7 @@ export async function GET(
 
   const booking = await prisma.booking.findUnique({
     where: {
-      id: params.id,
+      id: context.params.id,
     },
     include: {
       listing: {
@@ -41,7 +41,7 @@ export async function GET(
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
   const session = await getServerSession(authOptions);
 
@@ -52,7 +52,7 @@ export async function PUT(
   const { status } = await req.json();
 
   const booking = await prisma.booking.findUnique({
-    where: { id: params.id },
+    where: { id: context.params.id },
     include: { listing: true },
   });
 
@@ -62,7 +62,7 @@ export async function PUT(
 
   const updatedBooking = await prisma.booking.update({
     where: {
-      id: params.id,
+      id: context.params.id,
     },
     data: {
       status,
