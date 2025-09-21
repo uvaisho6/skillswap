@@ -6,10 +6,13 @@ import { moderateText } from "@/lib/openai";
 
 const prisma = new PrismaClient();
 
-export async function GET(
-  req: NextRequest,
-  context: { params: { id: string } }
-) {
+type RouteContext = {
+  params: {
+    id: string;
+  };
+};
+
+export async function GET(req: NextRequest, context: RouteContext) {
   const session = await getServerSession(authOptions);
 
   if (!session?.user?.id) {
@@ -44,10 +47,7 @@ export async function GET(
   return NextResponse.json(messages);
 }
 
-export async function POST(
-  req: NextRequest,
-  context: { params: { id: string } }
-) {
+export async function POST(req: NextRequest, context: RouteContext) {
   const session = await getServerSession(authOptions);
 
   if (!session?.user?.id) {
